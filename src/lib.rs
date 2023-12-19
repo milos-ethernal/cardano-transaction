@@ -1,10 +1,3 @@
-use std::{
-    env,
-    fs::File,
-    io::Write,
-    process::{Command, Output},
-};
-
 use cardano_serialization_lib::{
     address::Address,
     crypto::{PrivateKey, TransactionHash, Vkeywitnesses},
@@ -13,7 +6,7 @@ use cardano_serialization_lib::{
     utils::{hash_transaction, make_vkey_witness, BigNum, Value},
     Transaction, TransactionInput, TransactionOutput, TransactionWitnessSet,
 };
-use dotenv::dotenv;
+use reqwest::Response;
 
 // https://github.com/Emurgo/cardano-serialization-lib/blob/master/doc/getting-started/generating-transactions.md
 /// Creates simple transaction
@@ -50,13 +43,13 @@ fn create_simple_transaction() -> Transaction {
     // exact amount of unspent output must be provided in amount otherwise you get: ValueNotConservedUTxO Error
     //                            TxHash                                 TxIx        Amount
     // --------------------------------------------------------------------------------------
-    // 3b14db5fa1e12e2c98236cb9ffb6a268f27ae6772976d47cd97a4ad03bb0e656     1        9999613294 lovelace + TxOutDatumNone
+    // 3d2939ad02ea5edc8732e60e9c9b98bf69146a5eb7f3c3ff8757358e09150364     1        9998447265 lovelace + TxOutDatumNone
     let mut inputs = TxInputsBuilder::new();
     inputs.add_key_input(
         &priv_key.to_public().hash(),
         &TransactionInput::new(
             &TransactionHash::from_hex(
-                "3b14db5fa1e12e2c98236cb9ffb6a268f27ae6772976d47cd97a4ad03bb0e656",
+                "3d2939ad02ea5edc8732e60e9c9b98bf69146a5eb7f3c3ff8757358e09150364",
             )
             .unwrap(),
             1,
@@ -85,7 +78,7 @@ fn create_simple_transaction() -> Transaction {
 
     // cardano-cli query tip --testnet-magic 2 --socket-path $CARDANO_NODE_SOCKET_PATH | jq -r '.slot'
     // add some to this value(for ex. + 200)
-    tx_builder.set_ttl_bignum(&BigNum::from_str("36266182").unwrap());
+    tx_builder.set_ttl_bignum(&BigNum::from_str("36330682").unwrap());
 
     // send chage to change address
     tx_builder.add_change_if_needed(&change_address).unwrap();
@@ -103,39 +96,20 @@ fn create_simple_transaction() -> Transaction {
     Transaction::new(&tx_body, &witnesses, None)
 }
 
-pub fn submit_transaction_cli() -> Output {
+pub async fn submit_transaction_cli() -> Response {
     let transaction = create_simple_transaction();
 
-    let mut file = File::create("tx.signed").unwrap();
-    file.write_all(
-        b"{
-    \"type\": \"Witnessed Tx BabbageEra\",
-    \"description\": \"Ledger Cddl Format\",
-    \"cborHex\": \"",
-    )
-    .unwrap();
-    file.write(transaction.to_hex().as_bytes()).unwrap();
-    file.write(
-        b"\"
-}",
-    )
-    .unwrap();
+    // Set up the URL for the cardano-submit-api
+    let url = "http://localhost:8090/api/submit/tx";
 
-    dotenv().ok();
-
-    let cardano_node_socket_path = env::var("CARDANO_NODE_SOCKET_PATH")
-        .expect("CARDANO_NODE_SOCKET_PATH in .env file must be set.");
-
-    Command::new("cardano-cli")
-        .arg("transaction")
-        .arg("submit")
-        .arg("--tx-file")
-        .arg("tx.signed")
-        .arg("--testnet-magic")
-        .arg("2")
-        .arg("--socket-path")
-        .arg(cardano_node_socket_path)
-        .output()
+    // Send the POST request with the CBOR-encoded transaction data
+    let client = reqwest::Client::new();
+    client
+        .post(url)
+        .header("Content-Type", "application/cbor")
+        .body(transaction.to_bytes())
+        .send()
+        .await
         .unwrap()
 }
 
@@ -150,19 +124,11 @@ mod tests {
         assert!(transaction.is_valid());
     }
 
-    #[test]
-    fn submit_simple_transaction_cli_test() {
-        let res = submit_transaction_cli();
+    #[tokio::test]
+    async fn submit_simple_transaction_cli_test() {
+        let response = submit_transaction_cli().await;
 
-        if res.status.code().unwrap() == 0 {
-            println!("{}", String::from_utf8_lossy(&res.stdout).into_owned());
-        } else {
-            println!(
-                "Error: {}",
-                String::from_utf8_lossy(&res.stderr).into_owned()
-            );
-        }
-
-        assert_eq!(res.status.code().unwrap(), 0);
+        assert!(response.status().is_success());
+        println!("Response body: {:?}", response.text().await.unwrap());
     }
 }
