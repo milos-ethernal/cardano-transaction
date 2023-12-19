@@ -96,7 +96,7 @@ fn create_simple_transaction() -> Transaction {
     Transaction::new(&tx_body, &witnesses, None)
 }
 
-pub async fn submit_transaction_cli() -> Response {
+pub async fn submit_transaction_api() -> Response {
     let transaction = create_simple_transaction();
 
     // Set up the URL for the cardano-submit-api
@@ -126,7 +126,7 @@ mod tests {
 
     #[tokio::test]
     async fn submit_simple_transaction_cli_test() {
-        let response = submit_transaction_cli().await;
+        let response = submit_transaction_api().await;
 
         assert!(response.status().is_success());
         println!("Response body: {:?}", response.text().await.unwrap());
