@@ -101,12 +101,12 @@ fn create_multisig_transaction() -> Transaction {
         &native_script,
         &TransactionInput::new(
             &TransactionHash::from_hex(
-                "f591eff89e2999037c4fbbb58e8a52544779a6461b8899c5b6ba45e478f52894",
+                "ad4c0ed6e76b7a63c681fcb25bf0e8adf679fd04a41f662cef75dbf41237e099",
             )
             .unwrap(),
             1,
         ),
-        &Value::new(&BigNum::from_str("9997000000").unwrap()),
+        &Value::new(&BigNum::from_str("9996000000").unwrap()),
     );
 
     // utxo of sender address
@@ -118,12 +118,12 @@ fn create_multisig_transaction() -> Transaction {
         &priv_key.to_public().hash(),
         &TransactionInput::new(
             &TransactionHash::from_hex(
-                "f591eff89e2999037c4fbbb58e8a52544779a6461b8899c5b6ba45e478f52894",
+                "ad4c0ed6e76b7a63c681fcb25bf0e8adf679fd04a41f662cef75dbf41237e099",
             )
             .unwrap(),
             2,
         ),
-        &Value::new(&BigNum::from_str("9995926914").unwrap()),
+        &Value::new(&BigNum::from_str("9995739677").unwrap()),
     );
 
     tx_builder.set_inputs(&inputs);
@@ -156,7 +156,7 @@ fn create_multisig_transaction() -> Transaction {
     tx_builder
         .add_output(&TransactionOutput::new(
             &script_address,
-            &Value::new(&BigNum::from_str("9996000000").unwrap()),
+            &Value::new(&BigNum::from_str("9995000000").unwrap()),
         ))
         .unwrap();
 
@@ -293,7 +293,10 @@ mod tests {
     #[test]
     fn it_works() {
         let transaction = create_multisig_transaction();
-
+        println!(
+            "Hex(cbor) for submision to ogmios: {:#?}",
+            transaction.to_hex()
+        );
         println!("{:#?}", transaction.to_json());
         assert!(transaction.is_valid());
     }
