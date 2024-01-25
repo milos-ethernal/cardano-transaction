@@ -8,8 +8,11 @@ use cardano_serialization_lib::{
     address::Address,
     crypto::{Ed25519KeyHash, PrivateKey, TransactionHash, Vkeywitnesses},
     fees::LinearFee,
+    metadata::{
+        AuxiliaryData, GeneralTransactionMetadata, MetadataList, MetadataMap, TransactionMetadatum,
+    },
     tx_builder::{self, tx_inputs_builder::TxInputsBuilder},
-    utils::{hash_transaction, make_vkey_witness, BigNum, Value},
+    utils::{hash_transaction, make_vkey_witness, BigNum, Int, Value},
     NativeScript, NativeScripts, ScriptNOfK, ScriptPubkey, Transaction, TransactionInput,
     TransactionOutput, TransactionWitnessSet,
 };
@@ -101,12 +104,12 @@ fn create_multisig_transaction() -> Transaction {
         &native_script,
         &TransactionInput::new(
             &TransactionHash::from_hex(
-                "ad4c0ed6e76b7a63c681fcb25bf0e8adf679fd04a41f662cef75dbf41237e099",
+                "5c28f54bb6202461dd6736054b68f1a5bc9a9c0071a30141bcd0cfe4fd36eed9",
             )
             .unwrap(),
             1,
         ),
-        &Value::new(&BigNum::from_str("9996000000").unwrap()),
+        &Value::new(&BigNum::from_str("9994000000").unwrap()),
     );
 
     // utxo of sender address
@@ -118,12 +121,12 @@ fn create_multisig_transaction() -> Transaction {
         &priv_key.to_public().hash(),
         &TransactionInput::new(
             &TransactionHash::from_hex(
-                "ad4c0ed6e76b7a63c681fcb25bf0e8adf679fd04a41f662cef75dbf41237e099",
+                "5c28f54bb6202461dd6736054b68f1a5bc9a9c0071a30141bcd0cfe4fd36eed9",
             )
             .unwrap(),
             2,
         ),
-        &Value::new(&BigNum::from_str("9995739677").unwrap()),
+        &Value::new(&BigNum::from_str("9993029229").unwrap()),
     );
 
     tx_builder.set_inputs(&inputs);
@@ -156,13 +159,54 @@ fn create_multisig_transaction() -> Transaction {
     tx_builder
         .add_output(&TransactionOutput::new(
             &script_address,
-            &Value::new(&BigNum::from_str("9995000000").unwrap()),
+            &Value::new(&BigNum::from_str("9993000000").unwrap()),
         ))
         .unwrap();
 
     // add 200 to current slot num and set it to ttl
     tx_builder
         .set_ttl_bignum(&BigNum::from_str((check_slot_num() + 200).to_string().as_str()).unwrap());
+
+    let mut gtm = GeneralTransactionMetadata::new();
+
+    let mut map = MetadataMap::new();
+    map.insert_str(
+        "chainId",
+        &TransactionMetadatum::new_text("vector".to_string()).unwrap(),
+    )
+    .unwrap();
+
+    let mut map_t1 = MetadataMap::new();
+    map_t1
+        .insert_str(
+            "address",
+            &TransactionMetadatum::new_text(
+                "addr_test1vpe3gtplyv5ygjnwnddyv0yc640hupqgkr2528xzf5nms7qalkkln".to_string(),
+            )
+            .unwrap(),
+        )
+        .unwrap();
+    map_t1
+        .insert_str(
+            "amount",
+            &TransactionMetadatum::new_int(&Int::new_i32(100000)),
+        )
+        .unwrap();
+
+    let mut list = MetadataList::new();
+    list.add(&TransactionMetadatum::new_map(&map_t1));
+
+    map.insert(
+        &TransactionMetadatum::new_text("transactions".to_string()).unwrap(),
+        &TransactionMetadatum::new_list(&list),
+    );
+
+    gtm.insert(&BigNum::one(), &TransactionMetadatum::new_map(&map));
+
+    let mut auxiliary_data = AuxiliaryData::new();
+    auxiliary_data.set_metadata(&gtm);
+
+    tx_builder.set_auxiliary_data(&auxiliary_data);
 
     // send chage to change address
     tx_builder.add_change_if_needed(&change_address).unwrap();
@@ -196,7 +240,7 @@ fn create_multisig_transaction() -> Transaction {
     scripts.add(&native_script);
     witnesses.set_native_scripts(&scripts);
 
-    Transaction::new(&tx_body, &witnesses, None)
+    Transaction::new(&tx_body, &witnesses, Some(auxiliary_data))
 }
 
 pub async fn submit_transaction_api() -> Response {
@@ -305,7 +349,8 @@ mod tests {
     async fn submit_multisig_transaction_api_test() {
         let response = submit_transaction_api().await;
 
-        assert!(response.status().is_success());
+        let status = response.status().is_success();
         println!("Response body: {:?}", response.text().await.unwrap());
+        assert!(status);
     }
 }
