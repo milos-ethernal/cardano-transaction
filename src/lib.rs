@@ -45,7 +45,7 @@ fn create_multisig_transaction() -> Transaction {
 
     // cat sender.skey | jq -r .cborHex | cut -c 5- | bech32 "ed25519_sk"
     let priv_key = PrivateKey::from_bech32(
-        "ed25519_sk1ppw7qu6uweqf7e98qns9at7ue4ylwvapmll2teda29xxjpqhn62q0nuuhc",
+        "ed25519_sk13cqzy9gj46px7jrwszg9e59697pawjzad64ad5k8um9wcw7j5hrq8jng8e",
     )
     .unwrap();
 
@@ -54,17 +54,17 @@ fn create_multisig_transaction() -> Transaction {
 
     //cat payment-0.skey | jq -r .cborHex | cut -c 5- | bech32 "ed25519_sk"
     let priv_key1 = PrivateKey::from_bech32(
-        "ed25519_sk15hfrsv39d5trqasd478wuvejnqvgv4tj5havv0dmfkwkyagtjy6qg290h5",
+        "ed25519_sk1d7lwm699ta6qz54rq7mv8vlxc7r7xst5c7wwhhj5g5zt9mn43gmqt4qz3j",
     )
     .unwrap();
     //cat payment-1.skey | jq -r .cborHex | cut -c 5- | bech32 "ed25519_sk"
     let priv_key2 = PrivateKey::from_bech32(
-        "ed25519_sk12px3umh8t2t5yr4r4qs27pae5mfevgg6rup7nc0ktyaxvcy0364q75cgdk",
+        "ed25519_sk16lat5wjxsm7xj293t2vrfsuj3tf2nlsjk9qflhlhgyjpc9laq9ssnlwjyv",
     )
     .unwrap();
     //cat payment-2.skey | jq -r .cborHex | cut -c 5- | bech32 "ed25519_sk"
     let priv_key3 = PrivateKey::from_bech32(
-        "ed25519_sk12px3umh8t2t5yr4r4qs27pae5mfevgg6rup7nc0ktyaxvcy0364q75cgdk",
+        "ed25519_sk18z4c33w0zt6j2x3mdw3utter08qv0m3xa52aay9jcjt6cknxrxjskeucr6",
     )
     .unwrap();
 
@@ -74,19 +74,19 @@ fn create_multisig_transaction() -> Transaction {
     let mut scripts = NativeScripts::new();
 
     let sig_script1 = NativeScript::new_script_pubkey(&ScriptPubkey::new(
-        &Ed25519KeyHash::from_hex("2fdcf9edb3603086032f347859e45107cc3fef4480455b9e564c62ee")
+        &Ed25519KeyHash::from_hex("d8f3f9ee291c253b7c12f4103f91f73026ec32690ad9bc99cc95f8f1")
             .unwrap(),
     ));
     scripts.add(&sig_script1);
 
     let sig_script2 = NativeScript::new_script_pubkey(&ScriptPubkey::new(
-        &Ed25519KeyHash::from_hex("12e6a8cb824a4305ca30fe34ab409fadb3a1991a52c1259e2f5ea869")
+        &Ed25519KeyHash::from_hex("86b45d41aee0a41bc3c099d3108f251b4318a28f883e19abefb618c8")
             .unwrap(),
     ));
     scripts.add(&sig_script2);
 
     let sig_script3 = NativeScript::new_script_pubkey(&ScriptPubkey::new(
-        &Ed25519KeyHash::from_hex("b75fe4ba634900d23145af515b1d754e8431d7b50550e8bf58dfed63")
+        &Ed25519KeyHash::from_hex("159bf228e41bc1e2b5fd1f347627db28111848f6b044ab1dc8bf5f57")
             .unwrap(),
     ));
     scripts.add(&sig_script3);
@@ -104,12 +104,12 @@ fn create_multisig_transaction() -> Transaction {
         &native_script,
         &TransactionInput::new(
             &TransactionHash::from_hex(
-                "5c28f54bb6202461dd6736054b68f1a5bc9a9c0071a30141bcd0cfe4fd36eed9",
+                "93f55324449d049076d6a29f04050e597bf7fea5491f8063e9beadb1e7f822f6",
             )
             .unwrap(),
-            1,
+            0,
         ),
-        &Value::new(&BigNum::from_str("9994000000").unwrap()),
+        &Value::new(&BigNum::from_str("9987197766").unwrap()),
     );
 
     // utxo of sender address
@@ -121,23 +121,23 @@ fn create_multisig_transaction() -> Transaction {
         &priv_key.to_public().hash(),
         &TransactionInput::new(
             &TransactionHash::from_hex(
-                "5c28f54bb6202461dd6736054b68f1a5bc9a9c0071a30141bcd0cfe4fd36eed9",
+                "93f55324449d049076d6a29f04050e597bf7fea5491f8063e9beadb1e7f822f6",
             )
             .unwrap(),
-            2,
+            1,
         ),
-        &Value::new(&BigNum::from_str("9993029229").unwrap()),
+        &Value::new(&BigNum::from_str("9999806647").unwrap()),
     );
 
     tx_builder.set_inputs(&inputs);
 
     // receiver address
     let output_address =
-        Address::from_bech32("addr_test1vptkepz8l4ze03478cvv6ptwduyglgk6lckxytjthkvvluc3dewfd")
+        Address::from_bech32("addr_test1vz9zwl6tv8qgkzxz4ck7jqye5gdfmzujcmh8vwc4fdv68qgamk2jh")
             .unwrap();
     // sender address
     let change_address =
-        Address::from_bech32("addr_test1vpe3gtplyv5ygjnwnddyv0yc640hupqgkr2528xzf5nms7qalkkln")
+        Address::from_bech32("addr_test1vq6zkfat4rlmj2nd2sylpjjg5qhcg9mk92wykaw4m2dp2rqneafvl")
             .unwrap();
 
     // receiver to receive 1000000
@@ -159,7 +159,7 @@ fn create_multisig_transaction() -> Transaction {
     tx_builder
         .add_output(&TransactionOutput::new(
             &script_address,
-            &Value::new(&BigNum::from_str("9993000000").unwrap()),
+            &Value::new(&BigNum::from_str("9986197766").unwrap()),
         ))
         .unwrap();
 
@@ -231,8 +231,8 @@ fn create_multisig_transaction() -> Transaction {
     vkey_witnesses.add(&vkey_witness_multisig_2);
 
     // 3rd multisig
-    let vkey_witness_multisig_3 = make_vkey_witness(&tx_hash, &priv_key3);
-    vkey_witnesses.add(&vkey_witness_multisig_3);
+    // let vkey_witness_multisig_3 = make_vkey_witness(&tx_hash, &priv_key3);
+    // vkey_witnesses.add(&vkey_witness_multisig_3);
 
     witnesses.set_vkeys(&vkey_witnesses);
 
